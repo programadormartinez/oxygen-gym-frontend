@@ -4,6 +4,7 @@ import { UserCheck } from "lucide-react";
 import { NumericKeypad } from "./NumericKeypad";
 import { CheckInDisplay } from "./CheckInDisplay";
 import { UserNoRegister } from "./UserNoRegister";
+import { Loading } from "./Loading";
 
 export const CheckInForm: React.FC = () => {
   const [documentId, setDocumentId] = useState("");
@@ -11,6 +12,7 @@ export const CheckInForm: React.FC = () => {
   const [checkedInMember, setCheckedInMember] =
     useState<ReturnType<typeof checkIn>>(undefined);
   const checkIn = useMemberStore((state) => state.checkIn);
+  const [loading, setLoading] = useState(false);
 
   const handleDocumentChange = (newValue: string) => {
     setDocumentId(newValue);
@@ -18,13 +20,17 @@ export const CheckInForm: React.FC = () => {
 
   useEffect(() => {
     if (documentId.length >= 8) {
-      fetch(`https://oxygen-gym-backend.onrender.com/api/clients/search/${documentId}`)
+      setLoading(true);
+      fetch(
+        `https://oxygen-gym-backend.onrender.com/api/clients/search/${documentId}`
+      )
         .then((res) => res.json())
         .then((data) => {
           if (data) {
             if (data.error) {
               setShowRegistration(true);
               setDocumentId("");
+              return;
             }
           }
           if (!data || data.length === 0) {
@@ -44,16 +50,19 @@ export const CheckInForm: React.FC = () => {
             setTimeout(() => {
               setCheckedInMember(undefined);
               setDocumentId("");
-            }, 10000);
+            }, 6000);
           }
         })
-        .catch((err) => {
-          console.log("LLEGUE ACA CON EL ERROR", err);
-        });
+        .catch((err) => {})
+        .finally(() => setLoading(false));
     }
   }, [documentId, checkIn]);
 
   const handleKeyPress = (value: string) => {
+    if (checkedInMember) {
+      setCheckedInMember(undefined);
+      setDocumentId("");
+    }
     if (documentId.length < 8) {
       handleDocumentChange(documentId + value);
     }
@@ -88,15 +97,19 @@ export const CheckInForm: React.FC = () => {
         />
       </div>
 
+      {loading && <Loading />}
+
       {checkedInMember && <CheckInDisplay member={checkedInMember} />}
 
-      <div className="mt-8">
-        <NumericKeypad
-          onKeyPress={handleKeyPress}
-          onDelete={handleDelete}
-          onClear={handleClear}
-        />
-      </div>
+      {!checkedInMember && !loading && (
+        <div className="mt-8">
+          <NumericKeypad
+            onKeyPress={handleKeyPress}
+            onDelete={handleDelete}
+            onClear={handleClear}
+          />
+        </div>
+      )}
 
       {showRegistration && (
         <UserNoRegister onClose={() => setShowRegistration(false)} />
