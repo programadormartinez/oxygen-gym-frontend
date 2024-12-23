@@ -18,7 +18,7 @@ export const CheckInForm: React.FC = () => {
 
   useEffect(() => {
     if (documentId.length >= 8) {
-      fetch(`http://localhost:3000/api/clients/search/${documentId}`)
+      fetch(`https://oxygen-gym-backend.onrender.com/api/clients/search/${documentId}`)
         .then((res) => res.json())
         .then((data) => {
           if (data) {
